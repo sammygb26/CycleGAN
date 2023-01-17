@@ -1,4 +1,4 @@
-from cyclegan import models
+import cyclegan.models as models
 import itertools
 import torch
 from torch import nn
@@ -95,10 +95,10 @@ class CycleGAN:
 
 
         # gen_a & gen_b
-        self.loss_gen_a = backward_gen(self.real_a, self.fake_a, self.rec_a, self.des_fake_a,
-                                       self.lambda_cyc, self.lambda_idt)
-        self.loss_gen_b = backward_gen(self.real_b, self.fake_b, self.rec_b, self.des_fake_b,
-                                       self.lambda_cyc, self.lambda_idt)
+        self.loss_gen_a = backward_gen(
+            self.real_a, self.fake_a, self.rec_a, self.des_fake_a, self.lambda_cyc, self.lambda_idt)
+        self.loss_gen_b = backward_gen(
+            self.real_b, self.fake_b, self.rec_b, self.des_fake_b, self.lambda_cyc, self.lambda_idt)
 
         set_requires_grad([self.des_a, self.des_b], True)
         set_requires_grad([self.gen_a, self.gen_b], False)
@@ -110,7 +110,6 @@ class CycleGAN:
         set_requires_grad([self.gen_a, self.gen_b], True)
 
         self.loss = self.loss_gen_a + self.loss_gen_b + self.loss_des_a + self.loss_des_b
-
         self.loss.backward()
 
     def optimize_parameters(self):

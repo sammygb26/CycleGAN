@@ -44,11 +44,11 @@ class CycleGANTrainer:
                 batch_b[0].to(device)
             )
 
-            if i % 10 == 0:
+            if i % 50 == 0:
                 print(f"[{i:{len(str(size))}}/{size}] G_A:{lga:.5f} G_B:{lgb:.5f} D_A:{lda:.5f} D_B{ldb:.5f}")
                 self.model.save(f"{self.main_folder}/epoch{epoch}")
 
-        self.model.save()
+        self.model.save(f"{self.main_folder}/epoch{epoch}")
 
 
 

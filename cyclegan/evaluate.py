@@ -2,7 +2,8 @@ import paramanager as pm
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 import torch
-from cyclegan import models, util
+import models
+import util
 
 PROTO_PARAMETERS = [
     pm.ProtoParameter("load_folder", None, str, ["l"], True),
