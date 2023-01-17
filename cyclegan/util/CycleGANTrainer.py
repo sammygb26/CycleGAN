@@ -1,4 +1,3 @@
-from cyclegan import models
 import torch
 import os
 
@@ -7,7 +6,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class CycleGANTrainer:
-    def __init__(self, model: models.CycleGAN, dataloader_a, dataloader_b, main_folder):
+    def __init__(self, model, dataloader_a, dataloader_b, main_folder):
         self.model = model
         self.dataloader_a = dataloader_a
         self.dataloader_b = dataloader_b

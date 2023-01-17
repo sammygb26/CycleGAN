@@ -1,5 +1,6 @@
 import paramanager as pm
-from cyclegan import models, util
+import models
+import util
 import os
 
 PROTO_PARAMETERS = [

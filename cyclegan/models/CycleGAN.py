@@ -1,8 +1,9 @@
-import cyclegan.models as models
 import itertools
 import torch
 from torch import nn
 import paramanager as pm
+from .Generator import Generator
+from .Discriminator import Discriminator
 import os
 
 
@@ -52,13 +53,13 @@ class CycleGAN:
         gen_a_path, gen_b_path, des_a_path, des_b_path = get_model_folders(load_folder)
 
         # Generators
-        self.gen_a = models.Generator(nc_b, nc_a, ngf, n_down, n_res, gen_a_path).to(device)
-        self.gen_b = models.Generator(nc_a, nc_b, ngf, n_down, n_res, gen_b_path).to(device)
+        self.gen_a = Generator(nc_b, nc_a, ngf, n_down, n_res, gen_a_path).to(device)
+        self.gen_b = Generator(nc_a, nc_b, ngf, n_down, n_res, gen_b_path).to(device)
 
         if training:
             # Discriminators (only needed when training)
-            self.des_a = models.Discriminator(nc_a, ndf, des_a_path).to(device)
-            self.des_b = models.Discriminator(nc_b, ndf, des_b_path).to(device)
+            self.des_a = Discriminator(nc_a, ndf, des_a_path).to(device)
+            self.des_b = Discriminator(nc_b, ndf, des_b_path).to(device)
 
             lr, beta1, beta2 = params.get_all("lr", "beta1", "beta2")
 
@@ -80,6 +81,7 @@ class CycleGAN:
     def forward_gen(self):
         self.fake_a = self.gen_a(self.real_b)
         self.fake_b = self.gen_b(self.real_a)
+
         self.rec_a = self.gen_a(self.fake_b)
         self.rec_b = self.gen_b(self.fake_a)
 
@@ -112,11 +114,11 @@ class CycleGAN:
         self.loss.backward()
 
     def optimize_parameters(self):
-        self.forward_gen()
-        self.forward_des()
-
         self.optimizer_gen.zero_grad()
         self.optimizer_des.zero_grad()
+
+        self.forward_gen()
+        self.forward_des()
 
         self.backward()
 
