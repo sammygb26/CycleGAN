@@ -25,16 +25,21 @@ def set_up_main_folder(main_folder: str):
         os.mkdir(main_folder)
 
 
+def main():
+    params = get_params()
+
+    main_folder, epochs = params.get_all("main_folder", "epochs")
+    set_up_main_folder(main_folder)
+
+    cycle_gan = models.CycleGAN(params, params["load_folder"])
+    data_a, data_b = util.get_datasets(*params.get_all("data_folder", "batch_size"))
+    trainer = util.CycleGANTrainer(cycle_gan, data_a, data_b, main_folder)
+
+    for i in range(epochs):
+        trainer.epoch(i)
+
+    print("done.")
+
+
 if __name__ == "__main__":
-    ps = get_params()
-    cg = models.CycleGAN(ps, ps["load_folder"])
-    mf = ps["main_folder"]
-
-    set_up_main_folder(mf)
-
-    data_a, data_b = util.get_datasets(*ps.get_all("data_folder", "batch_size"))
-    trainer = util.CycleGANTrainer(cg, data_a, data_b, mf)
-
-    trainer.epoch(0)
-
-
+    main()
