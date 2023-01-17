@@ -67,7 +67,7 @@ class CycleGAN:
                 itertools.chain(self.gen_a.parameters(), self.gen_b.parameters()),
                 lr, (beta1, beta2))
             self.optimizer_des = torch.optim.Adam(itertools.chain(
-                self.des_a.parameters(), self.gen_b.parameters()),
+                self.des_a.parameters(), self.des_b.parameters()),
                 lr, (beta1, beta2))
 
     def set_input(self, img_a: torch.Tensor, img_b: torch.Tensor):
@@ -92,7 +92,6 @@ class CycleGAN:
 
     def backward(self):
         set_requires_grad([self.des_a, self.des_b], False)
-
 
         # gen_a & gen_b
         self.loss_gen_a = backward_gen(

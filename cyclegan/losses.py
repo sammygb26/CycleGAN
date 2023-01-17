@@ -37,6 +37,7 @@ def plot_losses(df: pd.DataFrame, params: pm.ParameterSet):
             y = df[col]
             plt.plot(x, y, label=col)
 
+    plt.legend()
     plt.show()
 
 
