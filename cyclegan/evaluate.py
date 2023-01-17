@@ -12,6 +12,9 @@ PROTO_PARAMETERS = [
 ] + util.ARCHITECTURE_PARAMS
 
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+
 def get_params() -> pm.ParameterSet:
     params = pm.ParameterSet(PROTO_PARAMETERS, "Parameters")
     params.read_argv()
@@ -30,7 +33,7 @@ def get_cycle_gan(params: pm.ParameterSet):
 
 def get_images(params: pm.ParameterSet):
     data_a, data_b = util.get_datasets(*params.get_all("data_folder", "n_show"))
-    return next(iter(data_a))[0], next(iter(data_b))[0]
+    return next(iter(data_a))[0].to(device), next(iter(data_b))[0].to(device)
 
 
 def generate_images(faker, un_faker, real):
