@@ -4,25 +4,18 @@ from torch import nn
 import paramanager as pm
 from .Generator import Generator
 from .Discriminator import Discriminator
+from util import ImagePool
 import os
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def backward_des(des_real, des_fake):
-    real_loss = torch.mean((1 - des_real) ** 2)
-    fake_loss = torch.mean(des_fake ** 2)
+def backward_des(des, real, fake):
+    real_loss = torch.mean((1 - des(real)) ** 2)
+    fake_loss = torch.mean(des(fake) ** 2)
 
     return real_loss + fake_loss
-
-
-def backward_gen(real, fake, rec, des_score, lambda_cyc, lambda_idt):
-    cyc_loss = torch.mean(torch.abs(rec - real)) * lambda_cyc
-    idt_loss = torch.mean(torch.abs(fake - real)) * lambda_idt
-    gan_loss = torch.mean((1 - des_score) ** 2)
-
-    return cyc_loss + idt_loss + gan_loss
 
 
 def get_model_folders(load_folder: str = None):
@@ -34,7 +27,9 @@ def get_model_folders(load_folder: str = None):
 
 def set_requires_grad(nets: list[nn.Module], requires_grad: bool):
     for net in nets:
-        net.requires_grad_(requires_grad)
+        if net:
+            for param in net.parameters():
+                param.requires_grad = requires_grad
 
 
 class CycleGAN:
@@ -43,7 +38,6 @@ class CycleGAN:
 
         # Setting up class values
         self.loss_des_b, self.loss_des_a, self.loss_gen_a, self.loss_gen_b, self.loss = [0.0] * 5
-        self.des_fake_a, self.des_fake_b, self.des_real_a, self.des_real_b = [None] * 4
         self.real_a, self.real_b, self.fake_a, self.fake_b, self.rec_a, self.rec_b = [None] * 6
 
         # Get params
@@ -61,7 +55,9 @@ class CycleGAN:
             self.des_a = Discriminator(nc_a, ndf, des_a_path).to(device)
             self.des_b = Discriminator(nc_b, ndf, des_b_path).to(device)
 
-            lr, beta1, beta2 = params.get_all("lr", "beta1", "beta2")
+            lr, beta1, beta2, pool_size = params.get_all("lr", "beta1", "beta2", "pool_size")
+
+            self.image_pool = ImagePool(pool_size)
 
             # Set up optimizers
             self.optimizer_gen = torch.optim.Adam(
@@ -72,11 +68,8 @@ class CycleGAN:
                 lr, (beta1, beta2))
 
     def set_input(self, img_a: torch.Tensor, img_b: torch.Tensor):
-        img_a.to(device)
-        img_b.to(device)
-
-        self.real_a = img_a
-        self.real_b = img_b
+        self.real_a = img_a.to(device)
+        self.real_b = img_b.to(device)
 
     def forward_gen(self):
         self.fake_a = self.gen_a(self.real_b)
@@ -85,45 +78,51 @@ class CycleGAN:
         self.rec_a = self.gen_a(self.fake_b)
         self.rec_b = self.gen_b(self.fake_a)
 
-    def forward_des(self):
-        self.des_fake_a = self.des_a(self.fake_a)
-        self.des_fake_b = self.des_b(self.fake_b)
-
-        self.des_real_a = self.des_a(self.real_a)
-        self.des_real_b = self.des_b(self.real_b)
-
     def backward(self):
         set_requires_grad([self.des_a, self.des_b], False)
-
-        # gen_a & gen_b
-        self.loss_gen_a = backward_gen(
-            self.real_a, self.fake_a, self.rec_a, self.des_fake_a, self.lambda_cyc, self.lambda_idt)
-        self.loss_gen_b = backward_gen(
-            self.real_b, self.fake_b, self.rec_b, self.des_fake_b, self.lambda_cyc, self.lambda_idt)
-
+        self.backward_gen()
         set_requires_grad([self.des_a, self.des_b], True)
-        set_requires_grad([self.gen_a, self.gen_b], False)
+
+        self.backward_des()
+        self.loss = self.loss_gen_a + self.loss_gen_b + self.loss_des_a + self.loss_des_b
+
+    def backward_des(self):
+        fake_a = self.image_pool.query(self.fake_a.detach())
+        fake_b = self.image_pool.query(self.fake_b.detach())
 
         # des_a & des_b
-        self.loss_des_a = backward_des(self.des_real_a, self.des_fake_a)
-        self.loss_des_b = backward_des(self.des_real_b, self.des_fake_b)
+        self.loss_des_a = backward_des(self.des_a, self.real_a, fake_a)
+        self.loss_des_b = backward_des(self.des_b, self.real_b, fake_b)
 
-        set_requires_grad([self.gen_a, self.gen_b], True)
+        self.optimizer_des.zero_grad()
+        (self.loss_des_a + self.loss_des_b).backward()
+        self.optimizer_des.step()
 
-        self.loss = self.loss_gen_a + self.loss_gen_b + self.loss_des_a + self.loss_des_b
-        self.loss.backward()
+    def backward_gen(self):
+        # gen_a & gen_b
+        if self.lambda_idt > 0:
+            loss_idt_a = torch.mean(torch.abs(self.real_b - self.fake_a)) * self.lambda_idt
+            loss_idt_b = torch.mean(torch.abs(self.real_a - self.fake_b)) * self.lambda_idt
+        else:
+            loss_idt_a = 0
+            loss_idt_b = 0
+
+        loss_gan_a = torch.mean((1 - self.des_a(self.fake_a)) ** 2)
+        loss_gan_b = torch.mean((1 - self.des_b(self.fake_b)) ** 2)
+
+        loss_cyc_a = torch.mean(torch.abs(self.real_a - self.rec_a)) * self.lambda_cyc
+        loss_cyc_b = torch.mean(torch.abs(self.real_b - self.rec_b)) * self.lambda_cyc
+
+        self.loss_gen_a = loss_gan_a + loss_cyc_a + loss_idt_a
+        self.loss_gen_b = loss_gan_b + loss_cyc_b + loss_idt_b
+
+        self.optimizer_gen.zero_grad()
+        (self.loss_gen_a + self.loss_gen_b).backward()
+        self.optimizer_gen.step()
 
     def optimize_parameters(self):
-        self.optimizer_gen.zero_grad()
-        self.optimizer_des.zero_grad()
-
         self.forward_gen()
-        self.forward_des()
-
         self.backward()
-
-        self.optimizer_gen.step()
-        self.optimizer_des.step()
 
     def save(self, folder: str):
         if not os.path.exists(folder):
