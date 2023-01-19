@@ -4,9 +4,12 @@ from torchvision import transforms
 import os
 
 
-def get_datasets(data_folder: str, batch_size: int = 64):
-    dataloader_a = create_dataloader(os.path.join(data_folder, "testA"), batch_size=batch_size)
-    dataloader_b = create_dataloader(os.path.join(data_folder, "testB"), batch_size=batch_size)
+def get_datasets(data_folder, ext_a, ext_b, batch_size: int = 64):
+    folder_a = os.path.join(data_folder, ext_a)
+    folder_b = os.path.join(data_folder, ext_b)
+
+    dataloader_a = create_dataloader(folder_a, batch_size=batch_size)
+    dataloader_b = create_dataloader(folder_b, batch_size=batch_size)
 
     return dataloader_a, dataloader_b
 

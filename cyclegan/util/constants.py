@@ -9,6 +9,11 @@ ARCHITECTURE_PARAMS = [
     pm.ProtoParameter("ndf", 64, int),
 ]
 
+EVALUATION_PARAMS = [
+    pm.ProtoParameter("eval_ext_a", "testA", str, ["eval_a"]),
+    pm.ProtoParameter("eval_ext_b", "testB", str, ["eval_b"])
+]
+
 TRAINING_PARAMS = [
     pm.ProtoParameter("lr", 0.0002),
     pm.ProtoParameter("lr_end", None),
@@ -19,4 +24,6 @@ TRAINING_PARAMS = [
     pm.ProtoParameter("lambda_cyc", 10.0, pseudonyms=["lc"]),
     pm.ProtoParameter("lambda_idt", 0.0, pseudonyms=["li"]),
     pm.ProtoParameter("pool_size", 50, int, ["p"]),
+    pm.ProtoParameter("train_ext_a", "trainA", str, ["train_a"]),
+    pm.ProtoParameter("train_ext_b", "trainB", str, ["train_b"])
 ]

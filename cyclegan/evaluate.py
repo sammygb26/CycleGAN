@@ -8,8 +8,8 @@ import util
 PROTO_PARAMETERS = [
     pm.ProtoParameter("load_folder", None, str, ["l"], True),
     pm.ProtoParameter("data_folder", None, str, ["d"], True),
-    pm.ProtoParameter("n_show", 5, int, ["n"])
-] + util.ARCHITECTURE_PARAMS
+    pm.ProtoParameter("n_show", 5, int, ["n"]),
+] + util.ARCHITECTURE_PARAMS + util.EVALUATION_PARAMS
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -32,7 +32,7 @@ def get_cycle_gan(params: pm.ParameterSet):
 
 
 def get_images(params: pm.ParameterSet):
-    data_a, data_b = util.get_datasets(*params.get_all("data_folder", "n_show"))
+    data_a, data_b = util.get_datasets(*params.get_all("data_folder", "eval_ext_a", "eval_ext_b", "n_show"))
     return next(iter(data_a))[0].to(device), next(iter(data_b))[0].to(device)
 
 
