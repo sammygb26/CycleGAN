@@ -34,7 +34,7 @@ def main():
 
     cycle_gan = models.CycleGAN(params, params["load_folder"])
     data_a, data_b = util.get_datasets(*params.get_all("data_folder", "batch_size"))
-    trainer = util.CycleGANTrainer(cycle_gan, data_a, data_b, main_folder)
+    trainer = util.CycleGANTrainer(cycle_gan, data_a, data_b, params)
 
     for i in range(epochs):
         trainer.epoch(i)

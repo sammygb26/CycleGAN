@@ -4,7 +4,7 @@ from torch import nn
 import paramanager as pm
 from .Generator import Generator
 from .Discriminator import Discriminator
-from util import ImagePool
+from .ImagePool import ImagePool
 import os
 
 
@@ -57,7 +57,7 @@ class CycleGAN:
 
             lr, beta1, beta2, pool_size = params.get_all("lr", "beta1", "beta2", "pool_size")
 
-            self.image_pool = util.ImagePool(pool_size)
+            self.image_pool = ImagePool(pool_size)
 
             # Set up optimizers
             self.optimizer_gen = torch.optim.Adam(

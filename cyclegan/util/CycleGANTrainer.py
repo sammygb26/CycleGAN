@@ -1,17 +1,26 @@
 import torch
+from torch.optim.lr_scheduler import LinearLR
 import os
+import paramanager as pm
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class CycleGANTrainer:
-    def __init__(self, model, dataloader_a, dataloader_b, main_folder):
+    def __init__(self, model, dataloader_a, dataloader_b, params: pm.ParameterSet):
+        main_folder, lr_start, lr_end, epochs = params.get_all("main_folder", "lr", "lr_end", "epochs")
+
         self.model = model
         self.dataloader_a = dataloader_a
         self.dataloader_b = dataloader_b
         self.main_folder = main_folder
         self.losses_file = f"{main_folder}/losses.csv"
+
+        self.schedulers = [
+                LinearLR(self.model.optimizer_gen, lr_start, lr_end, epochs),
+                LinearLR(self.model.optimizer_des, lr_start, lr_end, epochs)
+            ] if lr_end else []
 
         if os.path.exists(self.losses_file):
             os.remove(self.losses_file)
@@ -40,12 +49,15 @@ class CycleGANTrainer:
         for i, (batch_a, batch_b) in enumerate(zip(self.dataloader_a, self.dataloader_b)):
             lga, lgb, lda, ldb = self.batch(
                 batch_a[0].to(device),
-                batch_b[0].to(device)
+                batch_b[0].to(device),
             )
 
             if i % 50 == 0:
                 print(f"[{i:{len(str(size))}}/{size}] G_A:{lga:.5f} G_B:{lgb:.5f} D_A:{lda:.5f} D_B{ldb:.5f}")
                 self.model.save(f"{self.main_folder}/epoch{epoch}")
+
+        for scheduler in self.schedulers:
+            scheduler.step()
 
         self.model.save(f"{self.main_folder}/epoch{epoch}")
 

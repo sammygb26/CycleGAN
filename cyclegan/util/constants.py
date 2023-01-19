@@ -11,6 +11,7 @@ ARCHITECTURE_PARAMS = [
 
 TRAINING_PARAMS = [
     pm.ProtoParameter("lr", 0.0002),
+    pm.ProtoParameter("lr_end", None),
     pm.ProtoParameter("beta1", 0.5),
     pm.ProtoParameter("beta2", 0.99),
     pm.ProtoParameter("batch_size", 1, int, ["bs"]),
