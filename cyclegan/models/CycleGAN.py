@@ -94,8 +94,9 @@ class CycleGAN:
         self.loss_des_a = backward_des(self.des_a, self.real_a, fake_a)
         self.loss_des_b = backward_des(self.des_b, self.real_b, fake_b)
 
+        # loss is halved to reduce rate at which D learns relative to G
         self.optimizer_des.zero_grad()
-        (self.loss_des_a + self.loss_des_b).backward()
+        ((self.loss_des_a + self.loss_des_b) / 2.0).backward()
         self.optimizer_des.step()
 
     def backward_gen(self):
