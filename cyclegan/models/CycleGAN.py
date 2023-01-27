@@ -43,6 +43,7 @@ class CycleGAN:
         # Get params
         nc_a, nc_b, ngf, n_down, n_res, ndf = params.get_all("nc_a", "nc_b", "ngf", "n_down", "n_res", "ndf")
         self.lambda_cyc, self.lambda_idt = self.params.get_all("lambda_cyc", "lambda_idt")
+        self.des_rel_lr = params["des_rel_lr"]
 
         gen_a_path, gen_b_path, des_a_path, des_b_path = get_model_folders(load_folder)
 
@@ -96,7 +97,7 @@ class CycleGAN:
 
         # loss is halved to reduce rate at which D learns relative to G
         self.optimizer_des.zero_grad()
-        ((self.loss_des_a + self.loss_des_b) / 2.0).backward()
+        ((self.loss_des_a + self.loss_des_b) * self.des_rel_lr).backward()
         self.optimizer_des.step()
 
     def backward_gen(self):

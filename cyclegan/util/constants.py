@@ -25,5 +25,6 @@ TRAINING_PARAMS = [
     pm.ProtoParameter("lambda_idt", 0.0, pseudonyms=["li"]),
     pm.ProtoParameter("pool_size", 50, int, ["p"]),
     pm.ProtoParameter("train_ext_a", "trainA", str, ["train_a"]),
-    pm.ProtoParameter("train_ext_b", "trainB", str, ["train_b"])
+    pm.ProtoParameter("train_ext_b", "trainB", str, ["train_b"]),
+    pm.ProtoParameter("des_rel_lr", 0.25, float),
 ]
