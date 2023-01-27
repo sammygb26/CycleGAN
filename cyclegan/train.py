@@ -31,6 +31,7 @@ def main():
 
     main_folder, epochs = params.get_all("main_folder", "epochs")
     set_up_main_folder(main_folder)
+    params.write_file(os.path.join(main_folder, f"{params.name}.txt"))
 
     cycle_gan = models.CycleGAN(params, params["load_folder"])
 
