@@ -57,8 +57,16 @@ class Generator(nn.Module):
 
         self.model = nn.Sequential(*model)
 
+        self.apply(self._init_weights)
+
         if weights_path:
             self.load_state_dict(torch.load(weights_path))
 
     def forward(self, x):
         return self.model(x)
+
+    def _init_weights(self, module : nn.Module):
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=0.02)
+            if module.bias is not None:
+                module.bias.data.normal_(mean=0.0, std=0.02)
