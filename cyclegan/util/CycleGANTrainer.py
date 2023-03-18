@@ -21,12 +21,11 @@ class CycleGANTrainer:
         self.losses_file = f"{main_folder}/losses.csv"
         self.des_rel_lr = params["des_rel_lr"]
 
+        end_factor = lr_end / lr_start
+
         self.schedulers = [
-                LinearLR(self.model.optimizer_gen, lr_start, lr_end, epochs),
-                LinearLR(self.model.optimizer_des, 
-                    lr_start * self.des_rel_lr, 
-                    lr_end * self.des_rel_lr, 
-                    epochs)
+                LinearLR(self.model.optimizer_gen, 1.0, end_factor, epochs),
+                LinearLR(self.model.optimizer_des, self.des_rel_lr, self.des_rel_lr * end_factor, epochs)
             ] if lr_end else []
 
         if os.path.exists(self.losses_file):
