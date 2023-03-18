@@ -9,7 +9,10 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class CycleGANTrainer:
     def __init__(self, model, dataloader_a, dataloader_b, params: pm.ParameterSet):
-        main_folder, lr_start, lr_end, epochs, lr_ = params.get_all("main_folder", "lr", "lr_end", "epochs")
+        main_folder, lr_start, lr_end, epochs = params.get_all("main_folder", "lr", "lr_end", "epochs")
+    
+        if lr_end is None:
+            lr_end = lr_start
 
         self.model = model
         self.dataloader_a = dataloader_a
