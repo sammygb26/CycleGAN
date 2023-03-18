@@ -8,7 +8,7 @@ class Generator(nn.Module):
                  ngf: int = 64,
                  n_down: int = 2,
                  n_res: int = 6,
-                 weights_path: str = None):
+                 weights_path: (None|str) = None):
         super(Generator, self).__init__()
 
         self.nc_in: int = nc_in

@@ -3,7 +3,7 @@ from torch import nn
 
 
 class Discriminator(nn.Module):
-    def __init__(self, nc_in: int, ndf: int, weights_path: str = None):
+    def __init__(self, nc_in: int, ndf: int, weights_path: (None|str) = None):
         super(Discriminator, self).__init__()
 
         self.nc_in: int = nc_in

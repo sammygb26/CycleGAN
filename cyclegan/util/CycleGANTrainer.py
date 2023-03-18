@@ -9,17 +9,21 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class CycleGANTrainer:
     def __init__(self, model, dataloader_a, dataloader_b, params: pm.ParameterSet):
-        main_folder, lr_start, lr_end, epochs = params.get_all("main_folder", "lr", "lr_end", "epochs")
+        main_folder, lr_start, lr_end, epochs, lr_ = params.get_all("main_folder", "lr", "lr_end", "epochs")
 
         self.model = model
         self.dataloader_a = dataloader_a
         self.dataloader_b = dataloader_b
         self.main_folder = main_folder
         self.losses_file = f"{main_folder}/losses.csv"
+        self.des_rel_lr = params["des_rel_lr"]
 
         self.schedulers = [
                 LinearLR(self.model.optimizer_gen, lr_start, lr_end, epochs),
-                LinearLR(self.model.optimizer_des, lr_start, lr_end, epochs)
+                LinearLR(self.model.optimizer_des, 
+                    lr_start * self.des_rel_lr, 
+                    lr_end * self.des_rel_lr, 
+                    epochs)
             ] if lr_end else []
 
         if os.path.exists(self.losses_file):

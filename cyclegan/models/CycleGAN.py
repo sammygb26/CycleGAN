@@ -18,7 +18,7 @@ def backward_des(des, real, fake):
     return real_loss + fake_loss
 
 
-def get_model_folders(load_folder: str = None):
+def get_model_folders(load_folder:(None|str) = None):
     if not load_folder:
         return None, None, None, None
 
@@ -33,17 +33,16 @@ def set_requires_grad(nets: list[nn.Module], requires_grad: bool):
 
 
 class CycleGAN:
-    def __init__(self, params: pm.ParameterSet, load_folder: str = None, training: bool = True):
+    def __init__(self, params: pm.ParameterSet, load_folder: (None|str) = None, training: bool = True):
         self.params = params
 
         # Setting up class values
         self.loss_des_b, self.loss_des_a, self.loss_gen_a, self.loss_gen_b, self.loss = [0.0] * 5
-        self.real_a, self.real_b, self.fake_a, self.fake_b, self.rec_a, self.rec_b = [None] * 6
+        self.real_a, self.real_b, self.fake_a, self.fake_b, self.rec_a, self.rec_b = [torch.Tensor([0])] * 6
 
         # Get params
         nc_a, nc_b, ngf, n_down, n_res, ndf = params.get_all("nc_a", "nc_b", "ngf", "n_down", "n_res", "ndf")
         self.lambda_cyc, self.lambda_idt = self.params.get_all("lambda_cyc", "lambda_idt")
-        self.des_rel_lr = params["des_rel_lr"]
 
         gen_a_path, gen_b_path, des_a_path, des_b_path = get_model_folders(load_folder)
 
@@ -73,8 +72,8 @@ class CycleGAN:
         self.real_b = img_b.to(device)
 
     def forward_gen(self):
-        self.fake_a = self.gen_a(self.real_b)
-        self.fake_b = self.gen_b(self.real_a)
+        self.fake_a : torch.Tensor = self.gen_a(self.real_b)
+        self.fake_b : torch.Tensor = self.gen_b(self.real_a)
 
         self.rec_a = self.gen_a(self.fake_b)
         self.rec_b = self.gen_b(self.fake_a)
@@ -97,7 +96,7 @@ class CycleGAN:
 
         # loss is halved to reduce rate at which D learns relative to G
         self.optimizer_des.zero_grad()
-        ((self.loss_des_a + self.loss_des_b) * self.des_rel_lr).backward()
+        (self.loss_des_a + self.loss_des_b).backward()
         self.optimizer_des.step()
 
     def backward_gen(self):
